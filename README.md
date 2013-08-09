@@ -1,4 +1,3 @@
-gdblib
-======
+# Introduction
 
-Go library for interfacing with the gdb debugger using the MI interface
+This library provides an interface between Go and the gdb/MI debugger. The goal is to allow any Go program to provide a GUI for gdb.
