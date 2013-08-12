@@ -1,27 +1,27 @@
 package gdblib
 
 import (
-	//"fmt"
+//"fmt"
 )
 
 type gdbResultNode struct {
 	children []gdbResultNode
-	
-	key string
-	value interface{}
+
+	key      string
+	value    interface{}
 	nodeType string
 }
 
 func createObjectNode(input string) (gdbResultNode, int) {
-//	fmt.Printf("OBJECT\n")
+	//	fmt.Printf("OBJECT\n")
 
 	node := gdbResultNode{nodeType: "object"}
-	
+
 	i := 1
-	
-	for ;i < len(input); i++ {
+
+	for ; i < len(input); i++ {
 		c := input[i]
-		
+
 		if c == '}' {
 			break
 		} else if c == ',' {
@@ -34,41 +34,41 @@ func createObjectNode(input string) (gdbResultNode, int) {
 			node.children = append(node.children, value)
 		}
 	}
-	
-//	fmt.Printf("OBJECT : %v %v\n", input[:i+1], i+1)
+
+	//	fmt.Printf("OBJECT : %v %v\n", input[:i+1], i+1)
 	return node, i + 1
 }
 
 func createStringNode(input string) (string, int) {
-//	fmt.Printf("STRING\n")
-	
+	//	fmt.Printf("STRING\n")
+
 	i := 1
 	buffer := `"`
-	
-	for ;i < len(input); i++ {
+
+	for ; i < len(input); i++ {
 		c := input[i]
-		
+
 		buffer = buffer + string(c)
-		
+
 		if c == '"' && (i <= 1 || input[i-1] != '\\') {
 			break
 		}
 	}
-	
-//	fmt.Printf("STRING : %v %v\n", input[:i+1], i+1)
-	return buffer, i+1
+
+	//	fmt.Printf("STRING : %v %v\n", input[:i+1], i+1)
+	return buffer, i + 1
 }
 
 func createArrayNode(input string) (gdbResultNode, int) {
-//	fmt.Printf("ARRAY\n")
-	
+	//	fmt.Printf("ARRAY\n")
+
 	node := gdbResultNode{nodeType: "array"}
-	
+
 	i := 1
-	
-	for ;i < len(input); i++ {
+
+	for ; i < len(input); i++ {
 		c := input[i]
-		
+
 		if c == '"' {
 			str, size := createStringNode(input[i:])
 			i = i + size - 1
@@ -96,23 +96,23 @@ func createArrayNode(input string) (gdbResultNode, int) {
 			node.children = append(node.children, childNode)
 		}
 	}
-	
-//	fmt.Printf("ARRAY : %v %v\n", input[:i+1], i+1)
+
+	//	fmt.Printf("ARRAY : %v %v\n", input[:i+1], i+1)
 	return node, i + 1
 }
 
 func createKeyValueNode(input string) (gdbResultNode, int) {
-//	fmt.Printf("KEYVALUE\n")
-	
+	//	fmt.Printf("KEYVALUE\n")
+
 	node := gdbResultNode{nodeType: "keyvalue"}
-	
+
 	buffer := ""
-	
+
 	i := 0
-	
-	for ;i < len(input); i++ {
+
+	for ; i < len(input); i++ {
 		c := input[i]
-		
+
 		if c == '=' {
 			node.key = buffer
 			buffer = ""
@@ -140,48 +140,48 @@ func createKeyValueNode(input string) (gdbResultNode, int) {
 			buffer = buffer + string(c)
 		}
 	}
-	
-//	if buffer != "" {
-//		node.value = buffer
-//	}
-	
-//	fmt.Printf("KEYVALUE : %v %v\n", input[:i+1], i+1)
-	return node, i+1
+
+	//	if buffer != "" {
+	//		node.value = buffer
+	//	}
+
+	//	fmt.Printf("KEYVALUE : %v %v\n", input[:i+1], i+1)
+	return node, i + 1
 }
 
 func (node *gdbResultNode) toJSON() string {
 	buffer := ""
-	
+
 	if node.nodeType == "array" {
 		buffer = buffer + "["
-		
-		for idx, child := range(node.children) {
+
+		for idx, child := range node.children {
 			if idx > 0 {
 				buffer = buffer + ","
 			}
-			
+
 			buffer = buffer + child.toJSON()
 		}
-		
+
 		buffer = buffer + "]"
 	} else if node.nodeType == "object" {
 		buffer = buffer + "{"
-		
-		for idx, child := range(node.children) {
+
+		for idx, child := range node.children {
 			if idx > 0 {
 				buffer = buffer + ","
 			}
-			
+
 			buffer = buffer + child.toJSON()
 		}
-		
+
 		buffer = buffer + "}"
 	} else if node.nodeType == "keyvalue" {
 		key := node.key
 		if key != "" {
 			buffer = buffer + "\"" + key + "\":"
 		}
-		
+
 		stringValue, ok := node.value.(string)
 		if ok {
 			buffer = buffer + stringValue
@@ -192,6 +192,6 @@ func (node *gdbResultNode) toJSON() string {
 			}
 		}
 	}
-	
+
 	return buffer
 }
