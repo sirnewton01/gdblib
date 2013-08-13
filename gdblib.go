@@ -5,11 +5,11 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io"
 	"os/exec"
 	"regexp"
 	"strconv"
 	"strings"
+	"sync"
 )
 
 type cmdDescr struct {
@@ -68,14 +68,6 @@ func NewGDB(program string, workingDir string) (*GDB, error) {
 	gdb.gdbCmd = exec.Command("gdb", program, "-i=mi")
 	gdb.gdbCmd.Dir = workingDir
 
-	errPipe, err := gdb.gdbCmd.StderrPipe()
-	outPipe, err := gdb.gdbCmd.StdoutPipe()
-	inPipe, err := gdb.gdbCmd.StdinPipe()
-
-	if err != nil {
-		return nil, err
-	}
-
 	gdb.Console = make(chan string)
 	gdb.Target = make(chan string)
 	gdb.InternalLog = make(chan string)
@@ -86,7 +78,28 @@ func NewGDB(program string, workingDir string) (*GDB, error) {
 	gdb.cmdRegistry = make(map[int64]cmdDescr)
 	gdb.nextId = 0
 
+	wg := sync.WaitGroup{}
+	wg.Add(2)
+	
+	wg2 := sync.WaitGroup{}
+	wg2.Add(1)
+
 	writer := func() {
+		inPipe, err := gdb.gdbCmd.StdinPipe()
+		
+		wg2.Done()
+		
+		if err != nil {
+			return
+		}
+		
+		wg.Done()
+		
+		// Force GDB into asynchronous non-stop mode so that it can accept
+		//  commands in the middle of execution.
+		inPipe.Write([]byte("-gdb-set target-async 1\n"))
+		inPipe.Write([]byte("-gdb-set non-stop on\n"))
+		
 		for {
 			select {
 			case newInput := <-gdb.input:
@@ -109,8 +122,18 @@ func NewGDB(program string, workingDir string) (*GDB, error) {
 		}
 	}
 
-	reader := func(r io.ReadCloser) {
-		reader := bufio.NewReader(r)
+	reader := func() {
+		wg2.Wait()
+		outPipe, err := gdb.gdbCmd.StdoutPipe()
+		gdb.gdbCmd.StderrPipe()
+		
+		if err != nil {
+			return
+		}
+		
+		wg.Done()
+		
+		reader := bufio.NewReader(outPipe)
 		resultRecordRegex := regexp.MustCompile(`^(\d*)\^(\S+?)(,(.*))?$`)
 		asyncRecordRegex := regexp.MustCompile(`^([*=])(\S+?),(.*)$`)
 
@@ -118,7 +141,6 @@ func NewGDB(program string, workingDir string) (*GDB, error) {
 			// TODO what about truncated lines, we should check isPrefix and manage the line better
 			lineBytes, _, err := reader.ReadLine()
 			if err != nil {
-				r.Close()
 				break
 			}
 
@@ -184,20 +206,15 @@ func NewGDB(program string, workingDir string) (*GDB, error) {
 		}
 	}
 
-	// TODO We probably should have a separate handler for the error pipe
-	go reader(errPipe)
-	go reader(outPipe)
+	go reader()
 	go writer()
+	
+	wg.Wait()
 
-	err = gdb.gdbCmd.Start()
+	err := gdb.gdbCmd.Start()
 	if err != nil {
 		return nil, err
 	}
-
-	// Force GDB into asynchronous non-stop mode so that it can accept
-	//  commands in the middle of execution.
-	inPipe.Write([]byte("-gdb-set target-async 1\n"))
-	inPipe.Write([]byte("-gdb-set non-stop on\n"))
 
 	return gdb, nil
 }
