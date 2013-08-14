@@ -30,6 +30,25 @@ func (gdb *GDB) ExecRun(parms ExecRunParms) error {
 	return err
 }
 
+type ExecArgsParms struct {
+	Args  string
+}
+
+func (gdb *GDB) ExecArgs(parms ExecArgsParms) error {
+	descriptor := cmdDescr{}
+
+	descriptor.cmd = "-exec-arguments"
+	descriptor.cmd = descriptor.cmd + " " + parms.Args
+
+	descriptor.response = make(chan cmdResultRecord)
+	gdb.input <- descriptor
+
+	result := <-descriptor.response
+	err := parseResult(result, nil)
+
+	return err
+}
+
 type ExecInterruptParms struct {
 	ThreadGroup  string
 	AllInferiors bool
