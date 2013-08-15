@@ -341,3 +341,37 @@ func TestArrayChildKeys(t *testing.T) {
 		}
 	}
 }
+
+func TestUnusualStrings(t *testing.T) {
+	// Octal sequence
+	input := `foo="1234\567"`
+	result, _ := createKeyValueNode(input)
+
+	if result.value != "\"1234567\"" {
+		t.Errorf("Value string is not unescaped properly. %v", result.value)
+	}
+	
+	// Newline
+	input = `foo="1234\n567"`
+	result, _ = createKeyValueNode(input)
+	
+	if result.value != `"1234\n567"` {
+		t.Errorf("Value string is not unescaped properly. %v", result.value)
+	}
+	
+	// Tab
+	input = `foo="1234\t567"`
+	result, _ = createKeyValueNode(input)
+	
+	if result.value != `"1234567"` {
+		t.Errorf("Value string is not unescaped properly. %v", result.value)
+	}
+	
+	// Hex sequence
+	input = `foo="1234\xFF567"`
+	result, _ = createKeyValueNode(input)
+	
+	if result.value != `"1234xFF567"` {
+		t.Errorf("Value string is not unescaped properly. %v", result.value)
+	}
+}

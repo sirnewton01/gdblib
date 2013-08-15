@@ -191,12 +191,15 @@ func NewGDB(program string, workingDir string) (*GDB, error) {
 
 				resultNode, _ := createObjectNode("{" + result + "}")
 				resultObj := make(map[string]interface{})
-				err := json.Unmarshal([]byte(resultNode.toJSON()), &resultObj)
+				jsonStr := resultNode.toJSON()
+				err := json.Unmarshal([]byte(jsonStr), &resultObj)
 
 				if err == nil {
 					resultRecord := AsyncResultRecord{Indication: resultIndication, Result: resultObj}
 					gdb.AsyncResults <- resultRecord
 				} else {
+					fmt.Printf("[ORIGINAL] %v\n", result)
+					fmt.Printf("[JSON] %v\n", jsonStr)
 					fmt.Printf("Error unmarshalling JSON for async result record: %v %v\n", err.Error(), resultNode.toJSON())
 				}
 				// TODO handle the parse error case
@@ -245,6 +248,8 @@ func parseResult(result cmdResultRecord, resultObj interface{}) error {
 
 		err := json.Unmarshal([]byte(jsonStr), &resultObj)
 		if err != nil {
+			fmt.Printf("[ORIGINAL] %v\n", result.result)
+			fmt.Printf("[JSON DUMP] %v\n", jsonStr)
 			return err
 		}
 	}

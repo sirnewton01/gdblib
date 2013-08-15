@@ -52,6 +52,36 @@ func createStringNode(input string) (string, int) {
 	for ; i < len(input); i++ {
 		c := input[i]
 
+		// This is the beginning of a C string escape sequence
+		// Figure out if there is a way to map it. Otherwise, skip
+		//  over it.
+		if c == '\\' && i < len(input) - 1 {
+			c2 := input[i+1]
+			
+			switch {
+			case c2 == 'n':
+				// Newline, leave as-is
+			case c2 >= '0' && c2 <= '9':
+				// Octal sequence (skip the slash and provide the octal numbers as-is for now)
+				continue
+			case c2 == 'x':
+				// Hex sequence (skip the slash and provide the hex numbers as-is for now)
+				continue
+			case c2 == 'r':
+				// Carriage return, skip
+				i = i + 1
+				continue
+			case c2 == 't':
+				// Tab, skip
+				i = i + 1
+				continue
+			case c2 == '\\':
+				// Double-backslash, skip because sometimes these are double-escaped
+				continue
+			default:
+			}
+		}
+
 		buffer = buffer + string(c)
 
 		if c == '"' && (i <= 1 || input[i-1] != '\\') {
