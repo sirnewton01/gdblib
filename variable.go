@@ -53,9 +53,11 @@ func (gdb *GDB) VarCreate(parms VarCreateParms) (*VarCreateResult, error) {
 		descriptor.cmd = descriptor.cmd + " "
 	}
 	
-	// Always enclose the expression in single quotes in cases where there are
-	//  special characters such as '&' in a variable name.
-	descriptor.cmd = descriptor.cmd + "'" + parms.Expression + "'"
+//	// Always enclose the expression in single quotes in cases where there are
+//	//  special characters such as '&' in a variable name.
+//	descriptor.cmd = descriptor.cmd + "'" + parms.Expression + "'"
+
+	descriptor.cmd = descriptor.cmd + parms.Expression
 	
 	descriptor.response = make(chan cmdResultRecord)
 	gdb.input <- descriptor
