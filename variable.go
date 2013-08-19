@@ -15,9 +15,6 @@ type VarCreateParms struct {
 	// An empty frame address defaults to the current frame.
 	FrameAddr string
 	
-	// Dereference the value of the expression. Default is false.
-	Dereference bool
-	
 	// Expression to assign this variable
 	Expression string
 }
@@ -46,16 +43,6 @@ func (gdb *GDB) VarCreate(parms VarCreateParms) (*VarCreateResult, error) {
 	} else {
 		descriptor.cmd = descriptor.cmd + " " + parms.FrameAddr
 	}
-	
-	if parms.Dereference {
-		descriptor.cmd = descriptor.cmd + " *"
-	} else {
-		descriptor.cmd = descriptor.cmd + " "
-	}
-	
-//	// Always enclose the expression in single quotes in cases where there are
-//	//  special characters such as '&' in a variable name.
-//	descriptor.cmd = descriptor.cmd + "'" + parms.Expression + "'"
 
 	descriptor.cmd = descriptor.cmd + parms.Expression
 	
