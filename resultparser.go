@@ -76,7 +76,9 @@ func createStringNode(input string) (string, int) {
 				i = i + 1
 				continue
 			case c2 == '\\':
-				// Double-backslash, skip because sometimes these are double-escaped
+				// Double-backslash, pass the escaped backslash on to the interpretation
+				buffer = buffer + `\\`
+				i = i + 1
 				continue
 			default:
 			}

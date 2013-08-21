@@ -44,7 +44,7 @@ func (gdb *GDB) VarCreate(parms VarCreateParms) (*VarCreateResult, error) {
 		descriptor.cmd = descriptor.cmd + " " + parms.FrameAddr
 	}
 
-	descriptor.cmd = descriptor.cmd + parms.Expression
+	descriptor.cmd = descriptor.cmd + " " + parms.Expression
 	
 	descriptor.response = make(chan cmdResultRecord)
 	gdb.input <- descriptor

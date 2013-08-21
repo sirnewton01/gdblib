@@ -374,4 +374,12 @@ func TestUnusualStrings(t *testing.T) {
 	if result.value != `"1234xFF567"` {
 		t.Errorf("Value string is not unescaped properly. %v", result.value)
 	}
+
+	// Double-slash handling
+	input = `foo="double\\slash"`
+	result, _ = createKeyValueNode(input)
+
+	if result.value != `"double\\slash"` {
+		t.Errorf("Value string is not unescaped properly. %v", result.value)
+	}
 }
