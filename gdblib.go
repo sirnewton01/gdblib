@@ -14,6 +14,7 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"runtime"
 )
 
 type cmdDescr struct {
@@ -71,6 +72,9 @@ func NewGDB(program string, workingDir string) (*GDB, error) {
 
 	gdb.gdbCmd = exec.Command("gdb", program, "-i=mi")
 	gdb.gdbCmd.Dir = workingDir
+	
+	// Perform any os-specific customizations on the command before launching it
+	fixCmd(gdb.gdbCmd)
 
 	gdb.Console = make(chan string)
 	gdb.Target = make(chan string)
@@ -102,7 +106,11 @@ func NewGDB(program string, workingDir string) (*GDB, error) {
 		// Force GDB into asynchronous non-stop mode so that it can accept
 		//  commands in the middle of execution.
 		inPipe.Write([]byte("-gdb-set target-async 1\n"))
-		inPipe.Write([]byte("-gdb-set non-stop on\n"))
+		
+		// Enable non-stop mode only on Linux
+		if runtime.GOOS == "linux" {		
+			inPipe.Write([]byte("-gdb-set non-stop on\n"))
+		}
 		
 		for {
 			select {
@@ -203,7 +211,7 @@ func NewGDB(program string, workingDir string) (*GDB, error) {
 					fmt.Printf("Error unmarshalling JSON for async result record: %v %v\n", err.Error(), resultNode.toJSON())
 				}
 				// TODO handle the parse error case
-				//				fmt.Printf("[ASYNC RESULT RECORD] %v %v\n", resultIndication, result)
+//								fmt.Printf("[ASYNC RESULT RECORD] %v %v\n", resultIndication, result)
 			} else if line == "(gdb) " {
 				// This is the gdb prompt. We can just throw it out
 			} else {
