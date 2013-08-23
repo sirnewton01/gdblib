@@ -12,7 +12,7 @@ type ExecRunParms struct {
 }
 
 func (gdb *GDB) ExecRun(parms ExecRunParms) error {
-	descriptor := cmdDescr{}
+	descriptor := cmdDescr{forceInterrupt: true}
 
 	descriptor.cmd = "-exec-run"
 	if parms.AllInferiors {
@@ -55,7 +55,7 @@ type ExecInterruptParms struct {
 }
 
 func (gdb *GDB) ExecInterrupt(parms ExecInterruptParms) error {
-	descriptor := cmdDescr{}
+	descriptor := cmdDescr{forceInterrupt: true}
 
 	descriptor.cmd = "-exec-interrupt"
 	if parms.AllInferiors {

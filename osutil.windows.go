@@ -7,6 +7,7 @@
 package gdblib
 
 import (
+	"os/exec"
 )
 
 func fixCmd(cmd *exec.Cmd) {

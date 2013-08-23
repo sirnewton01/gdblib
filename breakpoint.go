@@ -77,7 +77,7 @@ type BreakInsertResult struct {
 }
 
 func (gdb *GDB) BreakInsert(parms BreakInsertParms) (*BreakInsertResult, error) {
-	descriptor := cmdDescr{}
+	descriptor := cmdDescr{forceInterrupt: true}
 
 	descriptor.cmd = "-break-insert"
 	if parms.Temporary {
@@ -128,7 +128,7 @@ type BreakEnableParms struct {
 }
 
 func (gdb *GDB) BreakEnable(parms BreakEnableParms) (_ error) {
-	descriptor := cmdDescr{}
+	descriptor := cmdDescr{forceInterrupt: true}
 
 	descriptor.cmd = "-break-enable"
 
@@ -155,7 +155,7 @@ type BreakDisableParms struct {
 }
 
 func (gdb *GDB) BreakDisable(parms BreakDisableParms) (_ error) {
-	descriptor := cmdDescr{}
+	descriptor := cmdDescr{forceInterrupt: true}
 
 	descriptor.cmd = "-break-disable"
 

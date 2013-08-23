@@ -14,12 +14,13 @@ import (
 	"strconv"
 	"strings"
 	"sync"
-	"runtime"
+	"os"
 )
 
 type cmdDescr struct {
 	cmd      string
 	response chan cmdResultRecord
+	forceInterrupt bool
 }
 
 type cmdResultRecord struct {
@@ -44,6 +45,11 @@ type GDB struct {
 	AsyncResults chan AsyncResultRecord
 
 	gdbCmd *exec.Cmd
+	
+	// Inferior process (if running)
+	inferiorLock sync.Mutex
+	inferiorProcess *os.Process
+	inferiorRunning bool
 
 	// Internal channel to send a command to the gdb interpreter
 	input chan cmdDescr
@@ -70,7 +76,7 @@ func convertCString(cstr string) string {
 func NewGDB(program string, workingDir string) (*GDB, error) {
 	gdb := &GDB{}
 
-	gdb.gdbCmd = exec.Command("gdb", program, "-i=mi")
+	gdb.gdbCmd = exec.Command("gdb", program, "--interpreter", "mi2", "--nx")
 	gdb.gdbCmd.Dir = workingDir
 	
 	// Perform any os-specific customizations on the command before launching it
@@ -103,18 +109,22 @@ func NewGDB(program string, workingDir string) (*GDB, error) {
 		
 		wg.Done()
 		
-		// Force GDB into asynchronous non-stop mode so that it can accept
-		//  commands in the middle of execution.
-		inPipe.Write([]byte("-gdb-set target-async 1\n"))
-		
-		// Enable non-stop mode only on Linux
-		if runtime.GOOS == "linux" {		
-			inPipe.Write([]byte("-gdb-set non-stop on\n"))
-		}
+		// Add a default "main" breakpoint (works in C and Go) to force execution to pause
+		//  waiting for user to add breakpoints, etc.
+		inPipe.Write([]byte("-break-insert main\n"))
 		
 		for {
 			select {
 			case newInput := <-gdb.input:
+				// Interrupt the process so that we can send the command
+				gdb.inferiorLock.Lock()
+				interrupted := false
+				if newInput.forceInterrupt && gdb.inferiorProcess != nil && gdb.inferiorRunning {
+					interrupted = true
+					gdb.inferiorProcess.Signal(os.Interrupt)
+				}
+				gdb.inferiorLock.Unlock();
+				
 				if newInput.response != nil {
 					gdb.nextId++
 					id := gdb.nextId
@@ -123,6 +133,10 @@ func NewGDB(program string, workingDir string) (*GDB, error) {
 					inPipe.Write([]byte(strconv.FormatInt(id, 10) + newInput.cmd + "\n"))
 				} else {
 					inPipe.Write([]byte(newInput.cmd + "\n"))
+				}
+				
+				if interrupted {
+					inPipe.Write([]byte("-exec-continue\n"))
 				}
 			case resultRecord := <-gdb.result:
 				descriptor := gdb.cmdRegistry[resultRecord.id]
@@ -192,6 +206,7 @@ func NewGDB(program string, workingDir string) (*GDB, error) {
 				//					fmt.Printf("[RESULT RECORD] ID:%v %v %v\n", commandId, resultIndication, result)
 				//				}
 				// async record
+//				fmt.Printf("[ASYNC RESULT RECORD] %v %v\n", resultIndication, result)
 			} else if matches := asyncRecordRegex.FindStringSubmatch(line); matches != nil {
 				// recordType := matches[1]
 				resultIndication := matches[2]
@@ -204,6 +219,26 @@ func NewGDB(program string, workingDir string) (*GDB, error) {
 
 				if err == nil {
 					resultRecord := AsyncResultRecord{Indication: resultIndication, Result: resultObj}
+					
+					gdb.inferiorLock.Lock()
+					if resultIndication == "thread-group-started" {
+						pidStr, ok := resultObj["pid"].(string)
+						
+						if ok {
+							pid, err := strconv.ParseInt(pidStr, 10, 32)
+							if err == nil {
+								gdb.inferiorProcess, err = os.FindProcess(int(pid))
+							}
+						}
+					} else if resultIndication == "thread-group-exited" {
+						gdb.inferiorProcess = nil
+					} else if resultIndication == "running" {
+						gdb.inferiorRunning = true
+					} else if resultIndication == "stopped" {
+						gdb.inferiorRunning = false
+					}
+					gdb.inferiorLock.Unlock()
+					
 					gdb.AsyncResults <- resultRecord
 				} else {
 					fmt.Printf("[ORIGINAL] %v\n", result)
@@ -211,7 +246,7 @@ func NewGDB(program string, workingDir string) (*GDB, error) {
 					fmt.Printf("Error unmarshalling JSON for async result record: %v %v\n", err.Error(), resultNode.toJSON())
 				}
 				// TODO handle the parse error case
-//								fmt.Printf("[ASYNC RESULT RECORD] %v %v\n", resultIndication, result)
+//				fmt.Printf("[ASYNC RESULT RECORD] %v %v\n", resultIndication, result)
 			} else if line == "(gdb) " {
 				// This is the gdb prompt. We can just throw it out
 			} else {
@@ -266,7 +301,7 @@ func parseResult(result cmdResultRecord, resultObj interface{}) error {
 }
 
 func (gdb *GDB) GdbExit() {
-	descriptor := cmdDescr{}
+	descriptor := cmdDescr{forceInterrupt: true}
 	descriptor.cmd = "-gdb-exit"
 	descriptor.response = make(chan cmdResultRecord)
 	gdb.input <- descriptor
