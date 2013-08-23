@@ -18,7 +18,7 @@ var(
 
 func init() {
 	gopath := build.Default.GOPATH
-	sendSignalPath = gopath + "\\github.com\\sirnewton01\\gdblib\\SendSignal.exe"
+	sendSignalPath = gopath + "\\src\\github.com\\sirnewton01\\gdblib\\SendSignal.exe"
 }
 
 func fixCmd(cmd *exec.Cmd) {
