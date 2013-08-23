@@ -7,6 +7,7 @@
 package gdblib
 
 import (
+	"os"
 	"os/exec"
 	"go/build"
 )
@@ -29,6 +30,6 @@ func interruptInferior(process *os.Process, pid string) {
 	// Invoke the included "sendsignal" program to send the
 	// Ctrl-break to the inferior process to interrupt it
 	
-	intCommand := exec.Command("cmd", "/c", "start", sendSignalPath, pid)
+	initCommand := exec.Command("cmd", "/c", "start", sendSignalPath, pid)
 	initCommand.Run()
 }
