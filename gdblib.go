@@ -49,6 +49,7 @@ type GDB struct {
 	// Inferior process (if running)
 	inferiorLock sync.Mutex
 	inferiorProcess *os.Process
+	inferiorPid string
 	inferiorRunning bool
 
 	// Internal channel to send a command to the gdb interpreter
@@ -121,7 +122,7 @@ func NewGDB(program string, workingDir string) (*GDB, error) {
 				interrupted := false
 				if newInput.forceInterrupt && gdb.inferiorProcess != nil && gdb.inferiorRunning {
 					interrupted = true
-					gdb.inferiorProcess.Signal(os.Interrupt)
+					interruptInferior(gdb.inferiorProcess, gdb.inferiorPid)
 				}
 				gdb.inferiorLock.Unlock();
 				
@@ -228,6 +229,7 @@ func NewGDB(program string, workingDir string) (*GDB, error) {
 							pid, err := strconv.ParseInt(pidStr, 10, 32)
 							if err == nil {
 								gdb.inferiorProcess, err = os.FindProcess(int(pid))
+								gdb.inferiorPid = pidStr
 							}
 						}
 					} else if resultIndication == "thread-group-exited" {

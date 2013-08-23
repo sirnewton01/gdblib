@@ -8,7 +8,27 @@ package gdblib
 
 import (
 	"os/exec"
+	"go/build"
 )
 
+var(
+	sendSignalPath string
+)
+
+func init() {
+	gopath := build.Default.GOPATH
+	sendSignalPath = gopath + "\\github.com\\sirnewton01\\gdblib\\SendSignal.exe"
+}
+
 func fixCmd(cmd *exec.Cmd) {
+	// No process group separation is required on Windows.
+	// Processes do not share signals like they can on Unix.
+}
+
+func interruptInferior(process *os.Process, pid string) {
+	// Invoke the included "sendsignal" program to send the
+	// Ctrl-break to the inferior process to interrupt it
+	
+	intCommand := exec.Command("cmd", "/c", "start", sendSignalPath, pid)
+	initCommand.Run()
 }

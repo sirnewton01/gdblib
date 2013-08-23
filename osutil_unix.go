@@ -7,10 +7,15 @@
 package gdblib
 
 import (
+	"os"
 	"os/exec"
 	"syscall"
 )
 
 func fixCmd(cmd *exec.Cmd) {
 	cmd.SysProcAttr = &syscall.SysProcAttr{Setpgid: true}
+}
+
+func interruptInferior(process *os.Process, pid string) {
+	process.Signal(os.Interrupt)
 }
