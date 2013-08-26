@@ -136,7 +136,9 @@ func NewGDB(program string, workingDir string) (*GDB, error) {
 					inPipe.Write([]byte(newInput.cmd + "\n"))
 				}
 				
-				if interrupted {
+				// If it is an empty command then it is because the client is requesting
+				//  plain interrupt without continuing.
+				if interrupted && newInput.cmd != "" {
 					inPipe.Write([]byte("-exec-continue\n"))
 				}
 			case resultRecord := <-gdb.result:

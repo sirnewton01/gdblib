@@ -50,26 +50,32 @@ func (gdb *GDB) ExecArgs(parms ExecArgsParms) error {
 }
 
 type ExecInterruptParms struct {
-	ThreadGroup  string
-	AllInferiors bool
+//	ThreadGroup  string
+//	AllInferiors bool
 }
 
-func (gdb *GDB) ExecInterrupt(parms ExecInterruptParms) error {
+func (gdb *GDB) ExecInterrupt(parms ExecInterruptParms) /*error*/ {
 	descriptor := cmdDescr{forceInterrupt: true}
 
-	descriptor.cmd = "-exec-interrupt"
-	if parms.AllInferiors {
-		descriptor.cmd = descriptor.cmd + " --all"
-	} else if parms.ThreadGroup != "" {
-		descriptor.cmd = descriptor.cmd + " --thread-group " + parms.ThreadGroup
-	}
+	// An interrupt is handled in a special way with an empty
+	//  command that forces interrupt. This will interrupt all
+	//  threads and make the gdb interpreter responsive to
+	//  commands.
+	descriptor.cmd = ""
 
-	descriptor.response = make(chan cmdResultRecord)
+//	descriptor.cmd = "-exec-interrupt"
+//	if parms.AllInferiors {
+//		descriptor.cmd = descriptor.cmd + " --all"
+//	} else if parms.ThreadGroup != "" {
+//		descriptor.cmd = descriptor.cmd + " --thread-group " + parms.ThreadGroup
+//	}
+
+//	descriptor.response = make(chan cmdResultRecord)
 	gdb.input <- descriptor
-	result := <-descriptor.response
-	err := parseResult(result, nil)
+//	result := <-descriptor.response
+//	err := parseResult(result, nil)
 
-	return err
+//	return err
 }
 
 type ExecNextParms struct {

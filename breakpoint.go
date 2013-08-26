@@ -41,7 +41,7 @@ type BreakPoint struct {
 }
 
 func (gdb *GDB) BreakList() (breakList *BreakListResult, _ error) {
-	descriptor := cmdDescr{}
+	descriptor := cmdDescr{forceInterrupt: true}
 
 	descriptor.cmd = "-break-list"
 
