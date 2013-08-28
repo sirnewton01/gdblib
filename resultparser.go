@@ -55,9 +55,9 @@ func createStringNode(input string) (string, int) {
 		// This is the beginning of a C string escape sequence
 		// Figure out if there is a way to map it. Otherwise, skip
 		//  over it.
-		if c == '\\' && i < len(input) - 1 {
+		if c == '\\' && i < len(input)-1 {
 			c2 := input[i+1]
-			
+
 			switch {
 			case c2 == 'n':
 				// Newline, leave as-is

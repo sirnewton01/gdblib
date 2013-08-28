@@ -31,7 +31,7 @@ func (gdb *GDB) ExecRun(parms ExecRunParms) error {
 }
 
 type ExecArgsParms struct {
-	Args  string
+	Args string
 }
 
 func (gdb *GDB) ExecArgs(parms ExecArgsParms) error {
@@ -50,8 +50,8 @@ func (gdb *GDB) ExecArgs(parms ExecArgsParms) error {
 }
 
 type ExecInterruptParms struct {
-//	ThreadGroup  string
-//	AllInferiors bool
+	//	ThreadGroup  string
+	//	AllInferiors bool
 }
 
 func (gdb *GDB) ExecInterrupt(parms ExecInterruptParms) /*error*/ {
@@ -63,19 +63,19 @@ func (gdb *GDB) ExecInterrupt(parms ExecInterruptParms) /*error*/ {
 	//  commands.
 	descriptor.cmd = ""
 
-//	descriptor.cmd = "-exec-interrupt"
-//	if parms.AllInferiors {
-//		descriptor.cmd = descriptor.cmd + " --all"
-//	} else if parms.ThreadGroup != "" {
-//		descriptor.cmd = descriptor.cmd + " --thread-group " + parms.ThreadGroup
-//	}
+	//	descriptor.cmd = "-exec-interrupt"
+	//	if parms.AllInferiors {
+	//		descriptor.cmd = descriptor.cmd + " --all"
+	//	} else if parms.ThreadGroup != "" {
+	//		descriptor.cmd = descriptor.cmd + " --thread-group " + parms.ThreadGroup
+	//	}
 
-//	descriptor.response = make(chan cmdResultRecord)
+	//	descriptor.response = make(chan cmdResultRecord)
 	gdb.input <- descriptor
-//	result := <-descriptor.response
-//	err := parseResult(result, nil)
+	//	result := <-descriptor.response
+	//	err := parseResult(result, nil)
 
-//	return err
+	//	return err
 }
 
 type ExecNextParms struct {

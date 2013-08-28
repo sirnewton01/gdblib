@@ -7,12 +7,12 @@
 package gdblib
 
 import (
+	"go/build"
 	"os"
 	"os/exec"
-	"go/build"
 )
 
-var(
+var (
 	sendSignalPath string
 )
 
@@ -29,7 +29,7 @@ func fixCmd(cmd *exec.Cmd) {
 func interruptInferior(process *os.Process, pid string) {
 	// Invoke the included "sendsignal" program to send the
 	// Ctrl-break to the inferior process to interrupt it
-	
+
 	initCommand := exec.Command("cmd", "/c", "start", sendSignalPath, pid)
 	initCommand.Run()
 }
