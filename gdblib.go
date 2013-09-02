@@ -80,7 +80,7 @@ func convertCString(cstr string) string {
 func NewGDB(program string, srcRoot string) (*GDB, error) {
 	gdb := &GDB{}
 
-	gdb.gdbCmd = exec.Command("gdb", program, "--interpreter", "mi2", "--nx")
+	gdb.gdbCmd = exec.Command("gdb", program, "--interpreter", "mi2")
 	if srcRoot != "" {
 		gdb.gdbCmd.Dir = srcRoot
 	}

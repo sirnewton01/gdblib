@@ -10,7 +10,7 @@ Godbg uses the gdb MI (Machine Interface) to debug yor application. The MI chang
 Gdb is available on Windows in either MinGW or Cygwin. To install the MinGW version visit http://www.mingw.org/ to download and install the tool suite (mingw-get-setup.exe). Once MingW is installed run the "MinGW Installer" to add the mingw32-gdb package (under "All Packages"). Make sure to add the "C:\MinGW\bin" directory to your PATH so that godbg can pick it up.
 
 ## Mac OS X
-The version of gdb on Mac OS X as part of Xcode is very old and will not work with godbg. Instead, you can download and compile the latest version of gdb from https://www.gnu.org/software/gdb/download/ and compile it using the Xcode compiler using "./configure && make"
+The version of gdb on Mac OS X as part of Xcode is very old and will not work with godbg. Instead, you can download and compile the latest version of gdb from https://www.gnu.org/software/gdb/download/. Note that there is a bug in all versions of gdb including the latest (7.6.1 at the time of writing this) that prevents the Go language support from being loaded. A patch is available [here](http://sourceware-org.1504.n7.nabble.com/Path-Add-support-for-mach-o-reader-to-be-aware-of-debug-gdb-scripts-td238372.html). After applying the patch you compile it with the Xcode compiler using "./configure --with-expat --with-python && make"
 
 ### Mac Codesigning Problem
 Mac OS X requires that the debugger binary is signed with a trusted certificate before it can take control of another process. If you see a message in the gdb console similar to "Unable to find Mach task port for process-id 12345: (os/kern) failure (0x5). (please check gdb is codesigned - see taskgated(8))" then you will need to follow these steps.
@@ -30,3 +30,16 @@ Mac OS X requires that the debugger binary is signed with a trusted certificate 
 * Sign the gdb binary by executing the following command
     + codesign -f -s "gdb-cert-name" "location-of-gdb-binary"
 
+## Go Runtime Support
+
+GDB versions 7.6+ come with increased safety precautions for auto-loading scripts, including the Go language helper script. This script not only helps gdb to pretty print variables but also helps gdb to avoid analyzing unitialized variables, which can cause gdb to become unresponsive.
+
+If the Go language helper script initializes properly you will see the message "Loading Go Runtime support." Otherwise, you might encounter the following message.
+
+warning: File "/usr/local/go/src/pkg/runtime/runtime-gdb.py" auto-loading has been declined by your `auto-load safe-path' set to "$debugdir:$datadir/auto-load".
+To enable execution of this file add
+add-auto-load-safe-path /usr/local/go/src/pkg/runtime/runtime-gdb.py
+line to your configuration file "/home/cmcgee/.gdbinit".
+...
+
+If you follow this instruction then your debugging experience should be much better. 
