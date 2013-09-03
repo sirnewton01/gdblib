@@ -10,6 +10,7 @@ import (
 	"go/build"
 	"os"
 	"os/exec"
+	"path/filepath"
 )
 
 var (
@@ -18,7 +19,15 @@ var (
 
 func init() {
 	gopath := build.Default.GOPATH
-	sendSignalPath = gopath + "\\src\\github.com\\sirnewton01\\gdblib\\SendSignal.exe"
+	gopaths := strins.Split(gopath, filepath.ListSeparator)
+	for _,path := range(gopaths) {
+		p := path + "\\src\\github.com\\sirnewton01\\gdblib\\SendSignal.exe"
+		_,err := os.Stat(p)
+		if err == nil {
+			sendSignalPath = p
+			break
+		}
+	}
 }
 
 func fixCmd(cmd *exec.Cmd) {
