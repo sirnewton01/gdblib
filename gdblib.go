@@ -180,6 +180,10 @@ func NewGDB(program string, srcRoot string) (*GDB, error) {
 
 			line := string(lineBytes)
 
+			if len(line) == 0 {
+				continue
+			}
+
 			// TODO unescape the quotes, newlines, etc.
 			// stream outputs
 			if line[0] == '~' {
