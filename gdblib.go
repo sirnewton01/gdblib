@@ -320,3 +320,28 @@ func (gdb *GDB) GdbExit() {
 	gdb.input <- descriptor
 	<-descriptor.response
 }
+
+func (gdb *GDB) GdbSet(name, value string) error {
+	descriptor := cmdDescr{}
+	descriptor.cmd = fmt.Sprintf("-gdb-set %s %s", name, value)
+	descriptor.response = make(chan cmdResultRecord)
+
+	gdb.input <- descriptor
+	rsp := <-descriptor.response
+
+	return parseResult(rsp, nil)
+}
+
+func (gdb *GDB) GdbShow(name string) (string, error) {
+	descriptor := cmdDescr{}
+	descriptor.cmd = fmt.Sprintf("-gdb-show %s", name)
+	descriptor.response = make(chan cmdResultRecord)
+
+	gdb.input <- descriptor
+	result := <-descriptor.response
+
+	resultMap := make(map[string]string)
+	err := parseResult(result, &resultMap)
+
+	return resultMap["value"], err
+}
