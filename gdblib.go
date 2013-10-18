@@ -74,13 +74,34 @@ func convertCString(cstr string) string {
 	return str
 }
 
-// NewGDB creates a new gdb debugging session. Provide the full OS path
+// NewGDBWithPID creates a new gdb debugging session.
+//  Provide the process ID of the program to debug.
+//  The source root directory is optional in order to resolve
+//  the source file references.
+func NewGDBWithPID(pid int, srcRoot string) (*GDB, error) {
+	args := []string{
+		"-p", fmt.Sprintf("%d", pid), "--interpreter", "mi2", "--nx",
+	}
+	return newGDB(args, srcRoot)
+}
+
+// NewGDB creates a new gdb debugging session.
+//  Provide the full OS path
 //  to the program to debug. The source root directory is optional in
 //  order to resolve the source file references.
 func NewGDB(program string, srcRoot string) (*GDB, error) {
+	args := []string{program, "--interpreter", "mi2", "--nx"}
+	return newGDB(args, srcRoot)
+}
+
+// newGDB creates a new gdb debugging session.
+//  Provide the arguments to the gdb process incantation.
+//  The source root directory is optional in order to resolve
+//  the source file references.
+func newGDB(cmd []string, srcRoot string) (*GDB, error) {
 	gdb := &GDB{}
 
-	gdb.gdbCmd = exec.Command("gdb", program, "--interpreter", "mi2", "--nx")
+	gdb.gdbCmd = exec.Command("gdb", cmd...)
 	if srcRoot != "" {
 		gdb.gdbCmd.Dir = srcRoot
 	}
