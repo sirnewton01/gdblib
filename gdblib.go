@@ -80,7 +80,7 @@ func convertCString(cstr string) string {
 //  the source file references.
 func NewGDBWithPID(pid int, srcRoot string) (*GDB, error) {
 	args := []string{
-		"-p", fmt.Sprintf("%d", pid), "--interpreter", "mi2", "--nx",
+		"-p", fmt.Sprintf("%d", pid), "--interpreter", "mi2",
 	}
 	return newGDB(args, srcRoot)
 }
@@ -90,7 +90,7 @@ func NewGDBWithPID(pid int, srcRoot string) (*GDB, error) {
 //  to the program to debug. The source root directory is optional in
 //  order to resolve the source file references.
 func NewGDB(program string, srcRoot string) (*GDB, error) {
-	args := []string{program, "--interpreter", "mi2", "--nx"}
+	args := []string{program, "--interpreter", "mi2"}
 	return newGDB(args, srcRoot)
 }
 
