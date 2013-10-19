@@ -172,13 +172,13 @@ func NewGDB(program string, srcRoot string) (*GDB, error) {
 		asyncRecordRegex := regexp.MustCompile(`^([*=])(\S+?),(.*)$`)
 
 		for {
-			// TODO what about truncated lines, we should check isPrefix and manage the line better
-			lineBytes, _, err := reader.ReadLine()
+			line, err := reader.ReadString('\n')
 			if err != nil {
+				fmt.Printf("ERROR: %v\n", err.Error())
 				break
 			}
-
-			line := string(lineBytes)
+			line = strings.Replace(line, "\r", "", -1)
+			line = strings.Replace(line, "\n", "", -1)
 
 			if len(line) == 0 {
 				continue
