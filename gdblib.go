@@ -267,7 +267,7 @@ func NewGDB(program string, srcRoot string) (*GDB, error) {
 			}
 		}
 	}
-	
+
 	// Handle standard error as if it comes from the target
 	errReader := func() {
 		wg2.Wait()
@@ -287,8 +287,8 @@ func NewGDB(program string, srcRoot string) (*GDB, error) {
 				fmt.Printf("ERROR: %v\n", err.Error())
 				break
 			}
-			
-			gdb.Target <- "[stderr] "+line
+
+			gdb.Target <- "[stderr] " + line
 		}
 	}
 

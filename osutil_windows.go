@@ -21,9 +21,9 @@ var (
 func init() {
 	gopath := build.Default.GOPATH
 	gopaths := strings.Split(gopath, string(filepath.ListSeparator))
-	for _,path := range(gopaths) {
+	for _, path := range gopaths {
 		p := path + "\\src\\github.com\\sirnewton01\\gdblib\\SendSignal.exe"
-		_,err := os.Stat(p)
+		_, err := os.Stat(p)
 		if err == nil {
 			sendSignalPath = p
 			break
