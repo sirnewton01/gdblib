@@ -99,7 +99,7 @@ func NewGDB(program string, srcRoot string) (*GDB, error) {
 	gdb.nextId = 0
 
 	wg := sync.WaitGroup{}
-	wg.Add(2)
+	wg.Add(3)
 
 	wg2 := sync.WaitGroup{}
 	wg2.Add(1)
@@ -159,7 +159,6 @@ func NewGDB(program string, srcRoot string) (*GDB, error) {
 	reader := func() {
 		wg2.Wait()
 		outPipe, err := gdb.gdbCmd.StdoutPipe()
-		gdb.gdbCmd.StderrPipe()
 
 		if err != nil {
 			return
@@ -268,8 +267,33 @@ func NewGDB(program string, srcRoot string) (*GDB, error) {
 			}
 		}
 	}
+	
+	// Handle standard error as if it comes from the target
+	errReader := func() {
+		wg2.Wait()
+		errPipe, err := gdb.gdbCmd.StderrPipe()
+
+		if err != nil {
+			return
+		}
+
+		wg.Done()
+
+		reader := bufio.NewReader(errPipe)
+
+		for {
+			line, err := reader.ReadString('\n')
+			if err != nil {
+				fmt.Printf("ERROR: %v\n", err.Error())
+				break
+			}
+			
+			gdb.Target <- "[stderr] "+line
+		}
+	}
 
 	go reader()
+	go errReader()
 	go writer()
 
 	wg.Wait()
